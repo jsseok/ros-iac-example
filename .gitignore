@@ -207,6 +207,7 @@ poetry.toml
 pyrightconfig.json
 
 ### ROS2 ###
+build/
 install/
 log/
 
