@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'usb_cam = sensing.usb_cam.main:main',
         ],
     },
 )

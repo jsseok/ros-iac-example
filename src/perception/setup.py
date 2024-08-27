@@ -20,6 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'seg_yolov8 = perception.seg_yolov8s.main:main',
+            #'class_yolov8 = perception.class_yolov8.main:main',
         ],
     },
 )
