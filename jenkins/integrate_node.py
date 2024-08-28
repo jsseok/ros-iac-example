@@ -1,5 +1,3 @@
-import yaml
-
 def read_features():
     with open("jenkins/artifact/list_of_features.txt", "r") as file:
         return [line.strip() for line in file.readlines()]
@@ -14,9 +12,9 @@ def node_integration(features):
 
 def generate_list_of_nodes_yaml(nodes):
     # TODO: Implement actual YAML generation based on the list of nodes
-    # For now, we'll just create an empty YAML file
+    # For now, we'll just create an empty file
     with open("jenkins/artifact/list_of_nodes.yaml", "w") as file:
-        yaml.dump({}, file)
+        pass  # This creates an empty file
 
 def main():
     features = read_features()
