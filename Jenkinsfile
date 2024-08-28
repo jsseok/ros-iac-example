@@ -13,7 +13,9 @@ pipeline {
                 echo 'requirement analysis'
                 script {
                     if (fileExists('jenkins/user_requirement.txt')) {
-                        sh 'python3 jenkins/analyze_req.py'           
+                        sh 'cat jenkins/user_requirement.txt'
+                        sh 'python3 jenkins/analyze_req.py'
+                        sh 'cat jenkins/artifact/list_of_features.txt'
                     } else {
                         echo 'user_requirement.txt not found'
                     }
@@ -26,6 +28,7 @@ pipeline {
                 script {
                     if (fileExists('jenkins/artifact/list_of_features.txt')) {
                         sh 'python3 jenkins/integrate_node.py'
+                        sh 'cat jenkins/artifact/list_of_nodes.yaml'
                     } else {
                         echo 'list_of_features.txt not found'
                     }
