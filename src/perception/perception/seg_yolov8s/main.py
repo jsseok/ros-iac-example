@@ -14,16 +14,13 @@ from ultralytics.utils import ASSETS, yaml_load
 from ultralytics.utils.checks import check_yaml
 from ultralytics.utils.plotting import Colors
 
-
-
-
 class SegYolov8s(Node):
 
     def __init__(self):
         super().__init__('seg_yolov8s')
         self.bridge = CvBridge()
         self.model = YOLOv8Seg(os.path.join(os.path.expanduser('~'), 'sdi_models','yolov8s-seg.onnx'))
-
+        self.get_logger().info('READY: seg_yolov8s')
         # sub & Image processing
         self.seg_yolov8s = self.create_subscription(
             Image,
