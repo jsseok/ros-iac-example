@@ -6,7 +6,6 @@ pipeline {
             steps {
                 echo 'directory setting'
                 sh 'mkdir -p jenkins/artifact'
-                sh 'pip install -r jenkins/requirements.txt'
             }
         }
         stage('Requirement Analysis') {
