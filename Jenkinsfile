@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Pipeline Artifact Directory Setting') {
             steps {
-                sh 'echo directory setting'
+                echo 'directory setting'
                 sh 'mkdir -p jenkins/artifact'
             }
         }
@@ -31,11 +31,11 @@ pipeline {
                 }
             }
         }
-        
         stage('Container Packaging') {
             steps {
+                echo 'container packaging'
                 if (fileExists('jenkins/artifact/list_of_nodes.yaml')){
-                    sh 'echo container packaging'
+                    echo 'execute some commands'
                 }
                 else {
                     echo 'ist_of_nodes.yaml not found'
@@ -44,7 +44,7 @@ pipeline {
         }
         stage('Container Push') {
             steps {
-                sh 'echo container push'
+                echo 'container push'
             }
         }
     }
