@@ -13,7 +13,7 @@ pipeline {
                 echo 'requirement analysis'
                 script {
                     if (fileExists('jenkins/user_requirement.txt')) {
-                        sh 'python jenkins/analyze_req.py'           
+                        sh 'python3 jenkins/analyze_req.py'           
                     } else {
                         echo 'user_requirement.txt not found'
                     }
@@ -25,7 +25,7 @@ pipeline {
                 echo 'ros node inetgration'
                 script {
                     if (fileExists('jenkins/artifact/list_of_features.txt')) {
-                        sh 'python jenkins/integrate_node.py'
+                        sh 'python3 jenkins/integrate_node.py'
                     } else {
                         echo 'list_of_features.txt not found'
                     }
