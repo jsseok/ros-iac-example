@@ -49,10 +49,10 @@ pipeline {
                 echo 'container push'
             }
         }
-        post {
-            always {
-                echo "Pipeline completed."
-            }
+    }
+    post {
+        always {
+            echo "Pipeline completed."
         }
     }
 }
