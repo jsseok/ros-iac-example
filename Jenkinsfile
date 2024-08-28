@@ -28,7 +28,7 @@ pipeline {
                 script {
                     if (fileExists('jenkins/artifact/list_of_features.txt')) {
                         sh 'python3 jenkins/integrate_node.py'
-                        sh 'cat jenkins/artifact/list_of_nodes.yaml'
+                        sh 'cat list_of_nodes.yaml'
                     } else {
                         echo 'list_of_features.txt not found'
                     }
