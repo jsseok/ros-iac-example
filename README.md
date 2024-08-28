@@ -3,16 +3,25 @@
 
 SDI 1차년도 CI/CV/CD 파이프라인 데모를 위한 예제 저장소입니다.
 
-범위:
-개발자가 소스를 개발하거나 요구사항을 push --> 요구사항 분석(kaist) --> Nodes 선정(kaist) --> List of Nodes 생성(kaist) --> Container 패키징(jenkins) --> 맞춤형 container 생성(output)
+### 데모 프로세스
+
+요구사항 작성 및 github 저장소로 push --> requierments.txt
+
+(Jenkins) requirements.txt --> ROS2 Nodes 선정 --> list_of_nodes.yaml
+
+(Jenkins) list_of_nodes.yaml --> 선정된 노드들을 기반으로 Container 패키징 실시 --> Container Image 생성
+
+(Jenkins) Container Image --> 내부 래포지토리로 저장
+
+(K8s) SDx 디바이스로 컨테이너 배포
 
 
 ---
 ## TODO 
  * 프로젝트 README TOC 만들기
  * 틈틈히 소스코드 및 README 작성하기
- * list_of_nodes 의 파일 형식 및 형태 정하기
- * Container 경량화 문제 다루기
+ * ~~list_of_nodes 의 파일 형식 및 형태 정하기~~
+ * ~~Container 경량화 문제 다루기~~
 ---
 ## Table of Contents
 
@@ -20,6 +29,17 @@ SDI 1차년도 CI/CV/CD 파이프라인 데모를 위한 예제 저장소입니�
 ## Overview
 ![overview](./docs/images/overview.jpg)
 
+
+## Node list
+현재 구현되어 레포지토리에 존재하는 노드 정보
+
+### Sensing
+[Documents](./src/sensing/README.md)
+* usb_cam 
+
+### Perception
+[Documents](./src/perception/README.md)
+* seg_yolov8s
 
 ## Conventions
 ### Branch strategy
