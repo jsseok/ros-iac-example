@@ -1,6 +1,17 @@
+import sys
+import os
+import json
 from setuptools import find_packages, setup
 
-package_name = 'perception'
+package_name='perception'
+
+entry_nodes = []
+
+with open('../../list_of_nodes.yaml', 'r', encoding='utf-8') as f:
+    data = json.load(f)
+    node_list = data.get(package_name, [])
+    if(len(node_list) > 0):
+        entry_nodes = [f"{node['node_name']} = {package_name}.{node['node_name']}.main:main" for node in node_list]
 
 setup(
     name=package_name,
@@ -19,7 +30,7 @@ setup(
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': [
-        ],
+        'console_scripts': entry_nodes,
     },
 )
+
