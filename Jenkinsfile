@@ -20,7 +20,6 @@ pipeline {
                 }
             }
         }
-        
         stage('ROS Node Integration') {
             steps {
                 echo 'ros node inetgration'
@@ -43,16 +42,17 @@ pipeline {
                         echo 'list_of_nodes.yaml not found'
                     }
                 }
+            }
         }
         stage('Container Push') {
             steps {
                 echo 'container push'
             }
         }
-    }
-    post {
-        always {
-            echo "Pipeline completed."
+        post {
+            always {
+                echo "Pipeline completed."
+            }
         }
     }
 }
