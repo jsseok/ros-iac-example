@@ -5,7 +5,7 @@
 
 ## 동작 구성
 
-![sdi_pipeline](./docs/images/sdi_pipeline.jpg)
+![sdi_pipeline](../docs/images/sdi_pipeline.jpg)
 
 
 ### Remote Multi-Architecture 구성
