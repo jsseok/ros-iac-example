@@ -12,16 +12,20 @@ RUN apt-get update && apt-get install -y \
     curl \
     unzip \
     rsync \
+    libgl1-mesa-glx \
+    ros-${ROS_DISTRO}-cv-bridge \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /ros2_ws/sdi_pipeline
 WORKDIR /ros2_ws
 
-RUN pip3 install --no-cache-dir --ignore-installed setuptools==58.2.0
+RUN pip3 install --no-cache-dir --ignore-installed setuptools==58.2.0 onnx ultralytics opencv-python-headless
+RUN yolo export model=yolov8s-seg.pt imgsz=640 format=onnx opset=12 simplify
+RUN mkdir -p /root/sdi_models && mv ./yolov8s-seg.onnx /root/sdi_models && rm ./yolov8s-seg.pt
 
 ARG GITHUB_PAT
 RUN curl -H "Authorization: token ${GITHUB_PAT}" -L \
-https://github.com/open-SDI/CI-CV-CD_Pipeline_Example/archive/refs/heads/main.zip -o ./main.zip
+https://github.com/open-SDI/CI-CV-CD_Pipeline_Example/archive/refs/heads/feature/dockerfile.zip -o ./main.zip
 RUN unzip main.zip -d ./tmp && \
     rsync -av --remove-source-files ./tmp/*/ ./sdi_pipeline && \
     rm -rf ./tmp main.zip
@@ -33,24 +37,22 @@ RUN colcon build
 
 
 # Stage 2 for runtime
-FROM ros:${ROS_DISTRO}-ros-base
+FROM ros:${ROS_DISTRO}-ros-core
 
 RUN apt-get update && apt-get install -y \
     python3-pip \
-    libgl1-mesa-glx \
     ros-${ROS_DISTRO}-cv-bridge \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /ros2_ws/sdi_pipeline
+RUN mkdir -p /root/sdi_models
+
+RUN pip3 install --no-cache-dir --ignore-installed "numpy<2" onnxruntime ultralytics
 
 COPY --from=builder /ros2_ws/sdi_pipeline/install /ros2_ws/sdi_pipeline/install
+COPY --from=builder /root/sdi_models/yolov8s-seg.onnx /root/sdi_models/yolov8s-seg.onnx
 
-RUN pip3 install --no-cache-dir --ignore-installed onnx ultralytics onnxruntime numpy opencv-python
-
-RUN yolo export model=yolov8s-seg.pt imgsz=640 format=onnx opset=12 simplify
-RUN mkdir -p ~/sdi_models && mv ./yolov8s-seg.onnx ~/sdi_models && rm ./yolov8s-seg.pt
-
-RUN echo "source /opt/ros/${ROS_DISTRO}/setup.sh" >> ~/.bashrc
-RUN echo "source /ros2_ws/sdi_pipeline/install/local_setup.sh" >> ~/.bashrc
+RUN echo "source /opt/ros/${ROS_DISTRO}/setup.sh" >> /root/.bashrc
+RUN echo "source /ros2_ws/sdi_pipeline/install/local_setup.sh" >> /root/.bashrc
 
 # CMD ["ros2", "run", "perception", "seg_yolov8s"]
