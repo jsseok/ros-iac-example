@@ -39,10 +39,22 @@ pipeline {
             steps {
                 echo 'container packaging'
                 script {
-                    if (fileExists('jenkins/artifact/list_of_nodes.yaml')) {
-                        echo 'execute some commands'
+                    // if (fileExists('jenkins/artifact/list_of_nodes.yaml')) {
+                    //     echo 'execute some commands'
+                    // } else {
+                    //     echo 'list_of_nodes.yaml not found'
+                    // }
+                    sh '''
+                    if docker buildx inspect mybuilder > /dev/null 2>&1; then
+                        docker buildx rm mybuilder
+                    fi
+
+                    docker buildx create --name mybuilder --driver remote --driver-opt network=tcp://129.254.174.129:32375 --use                    
+                    '''
+                    if (fileExists('container/container_build.sh')) {
+                        sh 'sh ./container/container_build.sh'
                     } else {
-                        echo 'list_of_nodes.yaml not found'
+                        echo 'container_build.sh not found'
                     }
                 }
             }
