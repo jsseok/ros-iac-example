@@ -45,12 +45,18 @@ pipeline {
                     //     echo 'list_of_nodes.yaml not found'
                     // }
                     sh '''
-                    if docker buildx inspect mybuilder > /dev/null 2>&1; then
-                        docker buildx rm mybuilder
+                    if docker context inspect buildctx > /dev/null 2>&1; then
+                        docker context rm buildctx
+                    fi
+                    docker context create buildctx --docker "host=tcp://129.254.174.129:32375"
+
+                    if docker buildx inspect builderx > /dev/null 2>&1; then
+                        docker buildx rm builderx
                     fi
 
-                    docker buildx create --name mybuilder --driver remote --driver-opt "addr=tcp://129.254.174.129:32375" --use
+                    docker buildx create --name builderx --use mycontext
                     '''
+                    
                     if (fileExists('container/container_build.sh')) {
                         sh 'sh ./container/container_build.sh'
                     } else {
