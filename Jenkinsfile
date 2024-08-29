@@ -49,7 +49,7 @@ pipeline {
                         docker buildx rm mybuilder
                     fi
 
-                    docker buildx create --name mybuilder --driver remote --driver-opt network=tcp://129.254.174.129:32375 --use                    
+                    docker buildx create --name mybuilder --driver remote --driver-opt "addr=tcp://129.254.174.129:32375" --use
                     '''
                     if (fileExists('container/container_build.sh')) {
                         sh 'sh ./container/container_build.sh'
