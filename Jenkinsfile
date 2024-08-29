@@ -53,8 +53,7 @@ pipeline {
                     if docker buildx inspect builderx > /dev/null 2>&1; then
                         docker buildx rm builderx
                     fi
-
-                    docker buildx create --name builderx --use mycontext
+                    docker buildx create --name builderx --use buildctx
                     '''
                     
                     if (fileExists('container/container_build.sh')) {
