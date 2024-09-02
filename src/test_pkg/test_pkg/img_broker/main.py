@@ -21,8 +21,8 @@ class ImageBroker(Node):
         self.bridge = CvBridge()
         self.flag = "rgb"
 
-        self.seg_message_delay_time = 0
-        self.class_message_delay_time = 0
+        self.seg_message_delay_time = None
+        self.class_message_delay_time = None
 
         timer_period = 0.5
         self.timer = self.create_timer(timer_period, self.select_img)
@@ -67,35 +67,28 @@ class ImageBroker(Node):
         if self.flag == "seg":
             self.pub_per_img.publish(msg)
 
-    # def select_img(self):
-    #     time_now = self.get_clock.now()
-
-    #     if (self.seg_message_delay_time > 0) and ((time_now - self.seg_message_delay_time).nanoseconds < 10**9) :
-    #         if self.flag != "seg":
-    #             self.flag = "seg"
-    #     else if (self.class_message_delay_time > 0) and (((time_now - self.class_message_delay_time).nanoseconds) < (10**9)) :
-    #         if self.flag != "class":
-    #             self.flag = "class"
-    #     else:
-    #         if self.flag != "rgb":
-    #             self.flag = "rgb"
     def select_img(self):
         time_now = self.get_clock().now()
 
-        if self.seg_message_delay_time > 0:
+        if self.seg_message_delay_time is not None:
             seg_diff = time_now - self.seg_message_delay_time
-            if seg_diff.seconds_nanoseconds()[0] == 0 and seg_diff.seconds_nanoseconds()[1] < 10**9:
+            if seg_diff.nanoseconds < 10**9:
                 if self.flag != "seg":
                     self.flag = "seg"
+                return
         
-        if self.class_message_delay_time > 0:
+        if self.class_message_delay_time is not None:
             class_diff = time_now - self.class_message_delay_time
-            if class_diff.seconds_nanoseconds()[0] == 0 and class_diff.seconds_nanoseconds()[1] < 10**9:
+            # self.get_logger().info(f'diff_time: {class_diff.nanoseconds}')
+            if class_diff.nanoseconds < 10**9:
                 if self.flag != "class":
                     self.flag = "class"
-        
+                return
+
         if self.flag != "rgb":
             self.flag = "rgb"
+        
+        # self.get_logger().info(f'Current flag : {self.flag}')
             
 def main(args=None):
     rclpy.init(args=args)
