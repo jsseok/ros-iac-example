@@ -4,6 +4,7 @@ pipeline {
     environment {
         DOCKER_HUB_USER = 'jsseok'
         DOCKER_HUB_PASS = 'dckr_pat_RqZTw6eodJwkHXiMnd3Cn9DnD0A'
+        KUBECONFIG = credentials('k8s-config')
     }
 
     stages {
@@ -76,6 +77,12 @@ pipeline {
         //         echo 'container push'
         //     }
         // }
+        stage('Deploy apps to k8s cluster') {
+            steps {
+                echo 'Deploy to k8s cluster'
+                sh 'kubectl apply -f ./container/k8s_deployment.yaml'
+            }
+        }
     }
     post {
         always {

@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sdi-pipeline-apps
+  namespace: sdi-ros-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sdi-pipeline-apps
+  template:
+    metadata:
+      annotations:
+        k8s.v1.cni.cncf.io/networks: conf-macvlan-eth, conf-macvlan-wlan
+      labels:
+        app: sdi-pipeline-apps
+        role: sdi-apps
+    spec:
+      containers:
+      - image: jsseok/sdi-pipeline-apps:latest
+        command: ["/bin/bash", "-c"]
+        args: ["ros2 run perception seg_yolov8s"]
+        imagePullPolicy: IfNotPresent
+        tty: true
+        name: sdi-pipeline-apps
+      nodeSelector:
+        kubernetes.io/hostname: node1-desktop
+      restartPolicy: Always
