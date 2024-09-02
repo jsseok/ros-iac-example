@@ -19,7 +19,7 @@ spec:
       containers:
       - image: jsseok/sdi-pipeline-apps:latest
         command: ["/bin/bash", "-c"]
-        args: ["ros2 run perception seg_yolov8s"]
+        args: ["source /opt/ros/$ROS_DISTRO/setup.bash && . /ros2_ws/sdi_pipeline/install/local_setup.bash && ros2 run perception seg_yolov8s"]
         imagePullPolicy: IfNotPresent
         tty: true
         name: sdi-pipeline-apps
