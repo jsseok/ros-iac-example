@@ -1,6 +1,11 @@
 pipeline {
     agent any
     
+    environment {
+        DOCKER_HUB_USER = 'jsseok'
+        DOCKER_HUB_PASS = 'dckr_pat_RqZTw6eodJwkHXiMnd3Cn9DnD0A'
+    }
+
     stages {
         stage('Pipeline Artifact Directory Setting') {
             steps {
@@ -45,6 +50,8 @@ pipeline {
                     //     echo 'list_of_nodes.yaml not found'
                     // }
                     sh '''
+                    echo $DOCKER_HUB_PASS | docker login -u $DOCKER_HUB_USER --password-stdin
+
                     if docker context inspect buildctx > /dev/null 2>&1; then
                         docker context rm buildctx
                     fi
@@ -64,11 +71,11 @@ pipeline {
                 }
             }
         }
-        stage('Container Push') {
-            steps {
-                echo 'container push'
-            }
-        }
+        // stage('Container Push') {
+        //     steps {
+        //         echo 'container push'
+        //     }
+        // }
     }
     post {
         always {
