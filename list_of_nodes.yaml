@@ -12,7 +12,8 @@
   ],
 
   "perception": [
-    {"node_name": "seg_yolov8s", "param":"param"}
+    {"node_name": "seg_yolov8s", "param":"param"},
+    {"node_name": "class_yolov8s", "param":"param"}
   ],
 
   "planning": [
@@ -21,6 +22,9 @@
 
   "sensing": [
     {"node_name": "usb_cam", "param":"param"}
-  ]
+  ],
 
+  "test_pkg": [
+    {"node_name": "img_broker", "param":"param"}
+  ]
 }
