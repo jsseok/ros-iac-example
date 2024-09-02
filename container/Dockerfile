@@ -47,8 +47,9 @@ RUN pip3 install --no-cache-dir --ignore-installed "numpy<2" onnx onnxruntime ul
 
 COPY --from=builder /ros2_ws/sdi_pipeline/install /ros2_ws/sdi_pipeline/install
 
-RUN yolo export model=yolov8s-seg.pt imgsz=640 format=onnx opset=12
-RUN mkdir -p ~/sdi_models && mv ./yolov8s-seg.onnx ~/sdi_models && rm ./yolov8s-seg.pt
-
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.sh" >> ~/.bashrc
 RUN echo "source /ros2_ws/sdi_pipeline/install/local_setup.sh" >> ~/.bashrc
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
