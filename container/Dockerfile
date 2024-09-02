@@ -43,7 +43,7 @@ RUN apt-get update && apt-get install -y \
 
 RUN mkdir -p /ros2_ws/sdi_pipeline
 
-RUN pip3 install --no-cache-dir --ignore-installed "numpy<2" onnxruntime ultralytics opencv-python
+RUN pip3 install --no-cache-dir --ignore-installed "numpy<2" onnx onnxruntime ultralytics opencv-python
 
 COPY --from=builder /ros2_ws/sdi_pipeline/install /ros2_ws/sdi_pipeline/install
 
