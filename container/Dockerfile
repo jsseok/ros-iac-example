@@ -2,7 +2,7 @@
 ARG GITHUB_PAT=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
 ARG ROS_DISTRO=humble
 
-# Stage 1 for builder
+# Stage 0 for builder
 FROM ros:${ROS_DISTRO}-ros-base AS builder
 
 RUN apt-get update && apt-get install -y \
@@ -32,7 +32,7 @@ RUN colcon build
 
 
 
-# Stage 2 for runtime
+# Stage 1 for runtime
 FROM ros:${ROS_DISTRO}-ros-core
 
 RUN apt-get update && apt-get install -y \
@@ -42,11 +42,13 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /ros2_ws/sdi_pipeline
-RUN mkdir -p /root/sdi_models
 
-RUN pip3 install --no-cache-dir --ignore-installed "numpy<2" onnxruntime ultralytics onnx ultralytics opencv-python-headless
-
-RUN yolo export model=yolov8s-seg.pt imgsz=640 format=onnx opset=12 simplify
-RUN mkdir -p /root/sdi_models && mv ./yolov8s-seg.onnx /root/sdi_models && rm ./yolov8s-seg.pt
+RUN pip3 install --no-cache-dir --ignore-installed "numpy<2" onnxruntime ultralytics opencv-python
 
 COPY --from=builder /ros2_ws/sdi_pipeline/install /ros2_ws/sdi_pipeline/install
+
+RUN yolo export model=yolov8s-seg.pt imgsz=640 format=onnx opset=12 simplify
+RUN mkdir -p ~/sdi_models && mv ./yolov8s-seg.onnx ~/sdi_models && rm ./yolov8s-seg.pt
+
+RUN echo "source /opt/ros/${ROS_DISTRO}/setup.sh" >> ~/.bashrc
+RUN echo "source /ros2_ws/sdi_pipeline/install/local_setup.sh" >> ~/.bashrc

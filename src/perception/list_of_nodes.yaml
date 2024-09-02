@@ -12,7 +12,7 @@
   ],
 
   "perception": [
-    {"node_name": "seg_yolov8", "param":"param"}
+    {"node_name": "seg_yolov8s", "param":"param"}
   ],
 
   "planning": [
@@ -22,5 +22,4 @@
   "sensing": [
     {"node_name": "usb_cam", "param":"param"}
   ]
-
 }
