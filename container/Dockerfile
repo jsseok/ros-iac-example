@@ -31,25 +31,19 @@ RUN . /opt/ros/${ROS_DISTRO}/setup.sh
 RUN colcon build
 
 
-
-# Stage 1 for runtime
-FROM ros:${ROS_DISTRO}-ros-core
+# Stage 1 for runtimehis
+FROM ros:${ROS_DISTRO}-ros-core AS arm64
 
 RUN apt-get update && apt-get install -y \
-    python3-pip \
-    libgl1-mesa-glx \
+    python3-pip libgl1-mesa-glx libglib2.0-0 \
     ros-${ROS_DISTRO}-cv-bridge \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /ros2_ws/sdi_pipeline
 
-RUN pip3 install --no-cache-dir --ignore-installed "numpy<2" onnx onnxruntime ultralytics opencv-python
-
 COPY --from=builder /ros2_ws/sdi_pipeline/install /ros2_ws/sdi_pipeline/install
-
-RUN echo "source /opt/ros/${ROS_DISTRO}/setup.sh" >> ~/.bashrc
-RUN echo "source /ros2_ws/sdi_pipeline/install/local_setup.sh" >> ~/.bashrc
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
 ENTRYPOINT ["/entrypoint.sh"]

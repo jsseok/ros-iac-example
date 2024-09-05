@@ -11,15 +11,14 @@ spec:
   template:
     metadata:
       annotations:
-        k8s.v1.cni.cncf.io/networks: conf-macvlan-eth, conf-macvlan-wlan
+        k8s.v1.cni.cncf.io/networks: conf-macvlan-eth1
       labels:
         app: sdi-pipeline-apps
         role: sdi-apps
     spec:
       containers:
       - image: jsseok/sdi-pipeline-apps:latest
-        command: ["/bin/bash", "-c"]
-        args: ["source /opt/ros/$ROS_DISTRO/setup.bash && . /ros2_ws/sdi_pipeline/install/local_setup.bash && ros2 run perception seg_yolov8s"]
+        args: ["ros2", "run", "perception", "seg_yolov8s"]
         imagePullPolicy: Always
         tty: true
         name: sdi-pipeline-apps
