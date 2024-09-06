@@ -22,6 +22,9 @@ spec:
         imagePullPolicy: Always
         tty: true
         name: sdi-pipeline-perception
+        env:
+        - name: ROS_DOMAIN_ID
+          value: "7"
       nodeSelector:
         kubernetes.io/hostname: jsseok-linux-dev
       restartPolicy: Always
@@ -52,6 +55,9 @@ spec:
         imagePullPolicy: Always
         tty: true
         name: sdi-pipeline-sensing-camera
+        env:
+        - name: ROS_DOMAIN_ID
+          value: "7"
         securityContext:
           privileged: true
         volumeMounts:

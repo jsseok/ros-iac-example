@@ -5,6 +5,8 @@ set -e
 source /opt/ros/${ROS_DISTRO}/setup.sh
 source /ros2_ws/sdi_pipeline/install/local_setup.sh
 
+export ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-7}
+
 if [ "$3" = "perception" ]; then
     if [ "$(uname -m)" = "aarch64" ]; then
         echo "ARM64 architecture"
