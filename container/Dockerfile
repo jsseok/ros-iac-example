@@ -35,7 +35,7 @@ RUN colcon build
 FROM ros:${ROS_DISTRO}-ros-core AS arm64
 
 RUN apt-get update && apt-get install -y \
-    python3-pip libgl1-mesa-glx libglib2.0-0 \
+    python3-pip libgl1-mesa-glx libglib2.0-0 gstreamer1.0* \
     ros-${ROS_DISTRO}-cv-bridge \
     && rm -rf /var/lib/apt/lists/*
 
