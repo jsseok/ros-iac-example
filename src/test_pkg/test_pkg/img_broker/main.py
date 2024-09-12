@@ -1,5 +1,6 @@
 import rclpy
 import os
+import cv2
 
 from rclpy.node import Node
 from sensor_msgs.msg import Image

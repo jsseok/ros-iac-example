@@ -32,7 +32,7 @@ RUN colcon build
 
 
 # Stage 1 for runtimehis
-FROM ros:${ROS_DISTRO}-ros-core AS arm64
+FROM ros:${ROS_DISTRO}-ros-core
 
 ENV ROS_DOMAIN_ID=7
 
