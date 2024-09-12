@@ -80,6 +80,7 @@ pipeline {
         stage('Deploy apps to k8s cluster') {
             steps {
                 echo 'Deploy to k8s cluster'
+                sh 'kubectl delete -f ./container/k8s_deployment.yaml'
                 sh 'kubectl apply -f ./container/k8s_deployment.yaml'
             }
         }

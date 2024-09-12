@@ -11,7 +11,6 @@ with open('../../list_of_nodes.yaml', 'r', encoding='utf-8') as f:
     if(len(node_list) > 0):
         entry_nodes = [f"{node['node_name']} = {package_name}.{node['node_name']}.main:main" for node in node_list]
 
-
 setup(
     name=package_name,
     version='0.0.0',

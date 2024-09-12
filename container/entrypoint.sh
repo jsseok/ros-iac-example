@@ -7,7 +7,7 @@ source /ros2_ws/sdi_pipeline/install/local_setup.sh
 
 export ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-7}
 
-if [ "$3" = "perception" ]; then
+if [ "$3" != "sensing" ]; then
     if [ "$(uname -m)" = "aarch64" ]; then
         echo "ARM64 architecture"
         if [ -d "/usr/local/cuda" ]; then       
@@ -22,8 +22,10 @@ if [ "$3" = "perception" ]; then
         pip install --no-cache-dir --ignore-installed torch torchvision onnx onnxruntime onnxruntime-gpu onnxslim opencv-python ultralytics
     fi
 
-    yolo export model=yolov8s-seg.pt imgsz=640 format=onnx opset=12 simplify
-    mkdir -p ~/sdi_models && mv ./yolov8s-seg.onnx ~/sdi_models && rm ./yolov8s-seg.pt
+    if [ "$3" = "perception" ]; then
+        yolo export model=yolov8s-seg.pt imgsz=640 format=onnx opset=12 simplify
+        mkdir -p ~/sdi_models && mv ./yolov8s-seg.onnx ~/sdi_models && rm ./yolov8s-seg.pt
+    fi
 else
     pip install --no-cache-dir --ignore-installed "numpy<2" opencv-python 
 fi
