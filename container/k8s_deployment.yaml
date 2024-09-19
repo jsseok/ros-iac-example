@@ -11,7 +11,7 @@ spec:
   template:
     metadata:
       annotations:
-        k8s.v1.cni.cncf.io/networks: conf-macvlan-eth1
+        k8s.v1.cni.cncf.io/networks: conf-macvlan-eth0
       labels:
         app: sdi-pipeline-apps
         role: sdi-apps
@@ -26,7 +26,7 @@ spec:
         - name: ROS_DOMAIN_ID
           value: "7"
       nodeSelector:
-        kubernetes.io/hostname: jsseok-linux-dev
+        kubernetes.io/hostname: node1-desktop
       restartPolicy: Always
 
 ---
@@ -60,54 +60,4 @@ spec:
           value: "7"
       nodeSelector:
         kubernetes.io/hostname: jsseok-linux-dev
-      restartPolicy: Always
-
----
-
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: sdi-pipeline-sensing
-  namespace: sdi-ros-system
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: sdi-pipeline-apps
-  template:
-    metadata:
-      annotations:
-        k8s.v1.cni.cncf.io/networks: conf-macvlan-wlan
-      labels:
-        app: sdi-pipeline-apps
-        role: sdi-apps
-    spec:
-      containers:
-      - image: jsseok/sdi-pipeline-apps:latest
-        args: ["ros2", "run", "sensing", "usb_cam"]
-        imagePullPolicy: Always
-        tty: true
-        name: sdi-pipeline-sensing-camera
-        env:
-        - name: ROS_DOMAIN_ID
-          value: "7"
-        securityContext:
-          privileged: true
-        volumeMounts:
-        - mountPath: /dev/video0
-          name: usb-camera
-        resources:
-          requests:
-            memory: "3Gi"
-            cpu: "3"
-          limits:
-            memory: "3Gi"
-            cpu: "3"
-      volumes:
-      - name: usb-camera
-        hostPath:
-          path: /dev/video0
-          type: CharDevice
-      nodeSelector:
-        kubernetes.io/hostname: nano
       restartPolicy: Always

@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import CompressedImage
-from rclpy.qos import QoSProfile, QoSReliabilityPolicy
+from sensor_msgs.msg import Image
+from rclpy.qos import qos_profile_sensor_data
 import numpy as np
 import cv2
 import time
@@ -11,19 +11,12 @@ from cv_bridge import CvBridge, CvBridgeError
 class USBcam(Node):
     def __init__(self):
         super().__init__('usb_cam')
-        
-        qos_profile = QoSProfile(depth=1)
-        qos_profile.reliability = QoSReliabilityPolicy.RELIABLE
-
-        self.publisher_rgb = self.create_publisher(CompressedImage, 'rgb_image', qos_profile)
+        self.publisher_rgb = self.create_publisher(Image, 'rgb_image', 10)
         timer_period = 0.1 # About 10 frames per sec. It is not bad for driving a Turtlebot3.
         self.timer = self.create_timer(timer_period, self.publish_rgb_msg)
         self.cap = cv2.VideoCapture(0)
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
-        self.cap.set(cv2.CAP_PROP_FPS, 10)
-        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # 카메라 버퍼 크기 감소
-
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 160)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
         self.bridge = CvBridge()
 
         self.last_time = time.time()
@@ -39,20 +32,22 @@ class USBcam(Node):
 
         self.get_logger().info(f"FPS: {self.fps:.2f}")
 
-        if self.cap.isOpened():
-            _, frame = self.cap.read()
+        # Create a messge instance
+        # msg_rgb = Image()
 
-            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 70]
-            ret, encimg = cv2.imencode('.jpg', frame, encode_param)
+        if self.cap.isOpened():
+            # Image read from usb_cam
+            ret, frame = self.cap.read()
+
             if ret:
-                msg_rgb = CompressedImage()
-                msg_rgb.header.stamp = self.get_clock().now().to_msg()
-                msg_rgb.format = "jpeg"
-                msg_rgb.data = encimg.tobytes()
+                # Sending message
+                # Using ros bridge is faster than handling byte processing manually with toByte() function.
+                # self.publisher_rgb.publish(self.bridge.cv2_to_imgmsg(frame, "bgr8"))
+                # self.get_logger().info('Publishing images')
+                msg_rgb = self.bridge.cv2_to_imgmsg(frame, "bgr8")
+                msg_rgb.header.frame_id = "camera_frame"
                 self.publisher_rgb.publish(msg_rgb)
 
-                del encimg
-                del frame
             else:
                 self.get_logger().info('Error: Camera is ready but something happend')
         else:
