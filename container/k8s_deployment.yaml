@@ -1,39 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sdi-pipeline-relay
-  namespace: sdi-ros-system
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: sdi-pipeline-apps
-  template:
-    metadata:
-      annotations:
-        k8s.v1.cni.cncf.io/networks: conf-macvlan-eth0
-      labels:
-        app: sdi-pipeline-apps
-        role: sdi-apps
-    spec:
-      containers:
-      - image: jsseok/sdi-pipeline-apps:latest
-        args: ["ros2", "run", "test_pkg", "img_broker"]
-        imagePullPolicy: Always
-        tty: true
-        name: sdi-pipeline-relay
-        env:
-        - name: ROS_DOMAIN_ID
-          value: "7"
-      nodeSelector:
-        kubernetes.io/hostname: node1-desktop
-      restartPolicy: Always
-
----
-
-apiVersion: apps/v1
-kind: Deployment
-metadata:
   name: sdi-pipeline-perception
   namespace: sdi-ros-system
 spec:
