@@ -11,7 +11,9 @@ spec:
   template:
     metadata:
       annotations:
-        k8s.v1.cni.cncf.io/networks: conf-macvlan-eth1
+        #k8s.v1.cni.cncf.io/networks: conf-macvlan-eth1
+        #k8s.v1.cni.cncf.io/networks: conf-macvlan-eth0
+        k8s.v1.cni.cncf.io/networks: conf-macvlan-wlan
       labels:
         app: sdi-pipeline-apps
         role: sdi-apps
@@ -26,5 +28,6 @@ spec:
         - name: ROS_DOMAIN_ID
           value: "7"
       nodeSelector:
-        kubernetes.io/hostname: jsseok-linux-dev
+        #kubernetes.io/hostname: jsseok-linux-dev
+        kubernetes.io/hostname: ubuntu
       restartPolicy: Always

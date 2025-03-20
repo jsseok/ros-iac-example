@@ -282,4 +282,8 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Syncthings
+*.stfolder
+*.stignore
+
 # End of https://www.toptal.com/developers/gitignore/api/windows,python,c++,visualstudiocode,ros2

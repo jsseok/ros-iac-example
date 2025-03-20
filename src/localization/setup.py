@@ -1,5 +1,5 @@
 from setuptools import find_packages, setup
-import json
+import json 
 
 package_name = 'localization'
 

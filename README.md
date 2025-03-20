@@ -9,7 +9,7 @@ SDI 1차년도 CI/CV/CD 파이프라인 데모를 위한 예제 저장소입니�
 
 (Jenkins) requirements.txt --> ROS2 Nodes 선정 --> list_of_nodes.yaml
 
-(Jenkins) list_of_nodes.yaml --> 선정된 노드들을 기반으로 Container 패키징 실시 --> Container Image 생성
+(Jenkins) list_of_nodes.json --> 선정된 노드들을 기반으로 Container 패키징 실시 --> Container Image 생성
 
 (Jenkins) Container Image --> 내부 래포지토리로 저장
 

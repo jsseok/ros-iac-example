@@ -12,7 +12,7 @@
   ],
 
   "perception": [
-    {"node_name": "seg_yolov8s", "param":"param"},
+    {"node_name": "seg_yolov8s", "param":"param"}
   ],
 
   "planning": [
