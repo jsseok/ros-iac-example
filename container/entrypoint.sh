@@ -12,14 +12,14 @@ if [ "$3" != "sensing" ]; then
         echo "ARM64 architecture"
         if [ -d "/usr/local/cuda" ]; then       
             echo "CUDA GPU"
-            pip install --no-cache-dir --ignore-installed pandas==1.5.3 numpy==1.23.5 torch==2.5 torchvision==0.20 onnx==1.13 onnxruntime-gpu==1.14 onnxslim onnxsim==0.4.33 cmake opencv-python ultralytics==8.2
+            pip install --no-cache-dir --ignore-installed pandas==1.5.3 numpy==1.23.5 torch==2.5 torchvision==0.20 onnx==1.13 onnxruntime-gpu==1.14 onnxslim onnxsim==0.4.33 opencv-python ultralytics==8.2
         else
             echo "No GPU"
-            pip install --no-cache-dir --ignore-installed pandas==1.5.3 numpy==1.23.5 torch==2.5 torchvision==0.20 onnx==1.13 onnxruntime==1.14 onnxslim onnxsim==0.4.33 cmake opencv-python ultralytics==8.2 --extra-index-url https://download.pytorch.org/whl/cpu
+            pip install --no-cache-dir --ignore-installed pandas==1.5.3 numpy==1.23.5 torch==2.5 torchvision==0.20 onnx==1.13 onnxruntime==1.14 onnxslim onnxsim==0.4.33 opencv-python ultralytics==8.2 --extra-index-url https://download.pytorch.org/whl/cpu
         fi
     else
         echo "AMD64 architecture"
-        pip install --no-cache-dir --ignore-installed pandas==1.5.3 numpy==1.23.5 torch==2.5 torchvision==0.20 onnx==1.13 onnxruntime-gpu==1.14 onnxslim onnxsim==0.4.33 cmake opencv-python ultralytics==8.2
+        pip install --no-cache-dir --ignore-installed pandas==1.5.3 numpy==1.23.5 torch==2.5 torchvision==0.20 onnx==1.13 onnxruntime-gpu==1.14 onnxslim onnxsim==0.4.33 opencv-python ultralytics==8.2
     fi
 
     if [ "$3" = "perception" ]; then
@@ -38,14 +38,14 @@ else
         echo "ARM64 architecture"
         if [ -d "/usr/local/cuda" ]; then
             echo "CUDA GPU"
-            pip install --no-cache-dir --ignore-installed pandas==1.5.3 numpy==1.23.5 torch==2.5 torchvision==0.20 onnx==1.13 onnxruntime-gpu==1.14 onnxslim onnxsim==0.4.33 cmake opencv-python ultralytics==8.2
+            pip install --no-cache-dir --ignore-installed pandas==1.5.3 numpy==1.23.5 torch==2.5 torchvision==0.20 onnx==1.13 onnxruntime-gpu==1.14 onnxslim onnxsim==0.4.33 opencv-python ultralytics==8.2
         else
             echo "No GPU"
-            pip install --no-cache-dir --ignore-installed pandas==1.5.3 numpy==1.23.5 torch==2.5 torchvision==0.20 onnx==1.13 onnxruntime==1.14 onnxslim onnxsim==0.4.33 cmake opencv-python ultralytics==8.2 --extra-index-url https://download.pytorch.org/whl/cpu
+            pip install --no-cache-dir --ignore-installed pandas==1.5.3 numpy==1.23.5 torch==2.5 torchvision==0.20 onnx==1.13 onnxruntime==1.14 onnxslim onnxsim==0.4.33 opencv-python ultralytics==8.2 --extra-index-url https://download.pytorch.org/whl/cpu
         fi
     else
         echo "AMD64 architecture"
-        pip install --no-cache-dir --ignore-installed pandas==1.5.3 numpy==1.23.5 torch==2.5 torchvision==0.20 onnx==1.13 onnxruntime-gpu==1.14 onnxslim onnxsim==0.4.33 cmake opencv-python ultralytics==8.2
+        pip install --no-cache-dir --ignore-installed pandas==1.5.3 numpy==1.23.5 torch==2.5 torchvision==0.20 onnx==1.13 onnxruntime-gpu==1.14 onnxslim onnxsim==0.4.33 opencv-python ultralytics==8.2
     fi
 
     yolo export model=yolov8s-seg.pt format=onnx opset=10 simplify
