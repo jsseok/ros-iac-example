@@ -1,5 +1,5 @@
 # ARG settings for build
-ARG GITHUB_PAT=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
+ARG GITHUB_PAT
 ARG ROS_DISTRO=humble
 
 # Stage 0 for builder
@@ -35,6 +35,10 @@ RUN colcon build
 FROM ros:${ROS_DISTRO}-ros-core
 
 ENV ROS_DOMAIN_ID=7
+
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /ros2_ws/sdi_pipeline
 
