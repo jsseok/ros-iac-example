@@ -19,7 +19,8 @@ spec:
         role: sdi-apps
     spec:
       containers:
-      - image: jsseok/sdi-pipeline-apps:latest
+        #- image: jsseok/sdi-pipeline-apps:latest
+      - image: jsseok/sdi-pipeline-apps:update
         args: ["ros2", "run", "perception", "seg_yolov8s"]
         imagePullPolicy: Always
         tty: true
@@ -29,5 +30,6 @@ spec:
           value: "7"
       nodeSelector:
         #kubernetes.io/hostname: jsseok-linux-dev
-        kubernetes.io/hostname: ubuntu
+        #kubernetes.io/hostname: ubuntu
+        kubernetes.io/hostname: nano
       restartPolicy: Always
