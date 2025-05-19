@@ -3,13 +3,9 @@ import json
 
 package_name = 'sensing'
 
-entry_nodes = []
-
-with open('../../list_of_nodes.yaml', 'r', encoding='utf-8') as f:
-    data = json.load(f)
-    node_list = data.get(package_name, [])
-    if(len(node_list) > 0):
-        entry_nodes = [f"{node['node_name']} = {package_name}.{node['node_name']}.main:main" for node in node_list]
+entry_nodes = [
+    'usb_cam = sensing.usb_cam.main:main',
+]
 
 setup(
     name=package_name,

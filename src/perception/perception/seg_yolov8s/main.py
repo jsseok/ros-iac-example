@@ -1,5 +1,6 @@
 import rclpy
 import os
+import yaml
 
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
@@ -9,17 +10,18 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import numpy as np
 import onnxruntime as ort
-
-from ultralytics.utils import ASSETS, yaml_load
-from ultralytics.utils.checks import check_yaml
-from ultralytics.utils.plotting import Colors
+import time
 
 class SegYolov8s(Node):
 
     def __init__(self):
         super().__init__('seg_yolov8s')
         self.bridge = CvBridge()
-        self.model = YOLOv8Seg(os.path.join(os.path.expanduser('~'), 'sdi_models','yolov8s-seg.onnx'))
+
+        #model_path = os.environ.get("YOLO_SEG_MODEL_PATH", "/home/jetson/ros_IaC/data/yolov8s-seg.onnx")
+        model_path = os.environ.get("YOLO_SEG_MODEL_PATH", "/home/jetson/ros_IaC/data/yolov8n-seg.onnx")
+        self.model = YOLOv8Seg(model_path)
+
         self.get_logger().info('READY: seg_yolov8s')
         # sub & Image processing
         self.seg_yolov8s = self.create_subscription(
@@ -31,18 +33,29 @@ class SegYolov8s(Node):
 
         # pub
         self.pub_seg_img = self.create_publisher(Image, 'seg_image', 1)
-    
-    def subscribe_topic_message(self, msg):
+
+        self.last_log_time = time.time()
+
+    def subscribe_topic_message(self, msg): 
+        start = time.time()
+
         # Get an image
         frame = self.bridge.imgmsg_to_cv2(msg, 'bgr8')
 
         # Segment the image
         boxes, segments, _ = self.model(frame, conf_threshold=0.25, iou_threshold=0.45)
+        # boxes, segments, _ = self.model(frame, conf_threshold=0.5, iou_threshold=0.45)
         if len(boxes) > 0:
             self.model.draw_and_visualize(frame, boxes, segments, vis=False, save=False)
-
         # Publish
         self.pub_seg_img.publish(self.bridge.cv2_to_imgmsg(frame, "bgr8"))
+
+        end = time.time()
+        fps = 1.0 / (end - start)
+        if end - self.last_log_time >= 10:
+            self.get_logger().info(f'Segmentation FPS: {fps:.2f}')
+            self.last_log_time = end
+
 
 class YOLOv8Seg:
     """YOLOv8 segmentation model."""
@@ -69,10 +82,15 @@ class YOLOv8Seg:
         self.model_height, self.model_width = [x.shape for x in self.session.get_inputs()][0][-2:]
 
         # Load COCO class names
-        self.classes = yaml_load(check_yaml("coco8.yaml"))["names"]
+        yaml_path = os.environ.get("YOLO_CLASSES_PATH", "/home/jetson/ros_IaC/data/coco8.yaml")
+
+        with open(yaml_path, "r") as f:
+            self.classes = yaml.safe_load(f)["names"]
 
         # Create color palette
-        self.color_palette = Colors()
+        # self.color_palette = np.random.uniform(0, 255, size=(len(self.classes), 3))
+        self.color_palette = [tuple(map(int, color)) for color in np.random.uniform(0, 255, size=(len(self.classes), 3))]
+
 
     def __call__(self, im0, conf_threshold=0.4, iou_threshold=0.45, nm=32):
         """
@@ -135,7 +153,8 @@ class YOLOv8Seg:
         img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(114, 114, 114))
 
         # Transforms: HWC to CHW -> BGR to RGB -> div(255) -> contiguous -> add axis(optional)
-        img = np.ascontiguousarray(np.einsum("HWC->CHW", img)[::-1], dtype=self.ndtype) / 255.0
+        # img = np.ascontiguousarray(np.einsum("HWC->CHW", img)[::-1], dtype=self.ndtype) / 255.0
+        img = img[..., ::-1].transpose(2, 0, 1).astype(self.ndtype) / 255.0  # BGR→RGB + HWC→CHW
         img_process = img[None] if len(img.shape) == 3 else img
         return img_process, ratio, (pad_w, pad_h)
 
@@ -158,6 +177,7 @@ class YOLOv8Seg:
             segments (List): list of segments.
             masks (np.ndarray): [N, H, W], output masks.
         """
+
         x, protos = preds[0], preds[1]  # Two outputs: predictions and protos
 
         # Transpose dim 1: (Batch_size, xywh_conf_cls_nm, Num_anchors) -> (Batch_size, Num_anchors, xywh_conf_cls_nm)
@@ -171,7 +191,18 @@ class YOLOv8Seg:
         x = np.c_[x[..., :4], np.amax(x[..., 4:-nm], axis=-1), np.argmax(x[..., 4:-nm], axis=-1), x[..., -nm:]]
 
         # NMS filtering
-        x = x[cv2.dnn.NMSBoxes(x[:, :4], x[:, 4], conf_threshold, iou_threshold)]
+        # x = x[cv2.dnn.NMSBoxes(x[:, :4], x[:, 4], conf_threshold, iou_threshold)]
+        boxes_cv = x[:, :4].tolist()
+        scores_cv = x[:, 4].tolist()
+        '''
+        indices = cv2.dnn.NMSBoxes(boxes_cv, scores_cv, conf_threshold, iou_threshold)
+        x = x[indices.flatten()] if len(indices) > 0 else []
+        '''
+        topk = 5
+        if len(x) > 0:
+            x = x[np.argsort(-x[:, 4])[:topk]]
+
+
 
         # Decode and return
         if len(x) > 0:
@@ -210,9 +241,12 @@ class YOLOv8Seg:
         """
         segments = []
         for x in masks.astype("uint8"):
-            c = cv2.findContours(x, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[0]  # CHAIN_APPROX_SIMPLE
+            c = cv2.findContours(x, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
+            #c = cv2.findContours(x, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[0]  # CHAIN_APPROX_SIMPLE
             if c:
                 c = np.array(c[np.array([len(x) for x in c]).argmax()]).reshape(-1, 2)
+                if len(c) < 10:
+                    continue
             else:
                 c = np.zeros((0, 2))  # no segments found
             segments.append(c.astype("float32"))
@@ -286,14 +320,16 @@ class YOLOv8Seg:
         if len(masks.shape) < 2:
             raise ValueError(f'"len of masks shape" should be 2 or 3, but got {len(masks.shape)}')
         masks = masks[top:bottom, left:right]
-        masks = cv2.resize(
-            masks, (im0_shape[1], im0_shape[0]), interpolation=cv2.INTER_LINEAR
-        )  # INTER_CUBIC would be better
+        # masks = cv2.resize(
+        #     masks, (im0_shape[1], im0_shape[0]), interpolation=cv2.INTER_LINEAR
+        # )  # INTER_CUBIC would be better
+        masks = cv2.resize(masks, (im0_shape[1], im0_shape[0]), interpolation=cv2.INTER_LINEAR)
+
         if len(masks.shape) == 2:
             masks = masks[:, :, None]
         return masks
 
-    def draw_and_visualize(self, im, bboxes, segments, vis=False, save=True):
+    def draw_and_visualize(self, im, bboxes, segments, vis=False, save=False):
         """
         Draw and visualize results.
 
@@ -308,18 +344,28 @@ class YOLOv8Seg:
             None
         """
         # Draw rectangles and polygons
-        im_canvas = im.copy()
+        #im_canvas = im.copy()
+        im_canvas = np.zeros_like(im)
         for (*box, conf, cls_), segment in zip(bboxes, segments):
             # draw contour and fill mask
-            cv2.polylines(im, np.int32([segment]), True, (255, 255, 255), 2)  # white borderline
-            cv2.fillPoly(im_canvas, np.int32([segment]), self.color_palette(int(cls_), bgr=True))
+            #cv2.polylines(im, np.int32([segment]), True, (255, 255, 255), 2)  # white borderline
+            #cv2.fillPoly(im_canvas, np.int32([segment]), self.color_palette(int(cls_), bgr=True))
+
+
+            color = self.color_palette[int(cls_)]  # ← 배열에서 색상 추출
+            color = tuple(map(int, color))  # ← OpenCV에 맞게 int 변환
+            #cv2.fillPoly(im, np.int32([segment]), color)
+            cv2.polylines(im, [np.int32(segment)], isClosed=True, color=color, thickness=2)
+
 
             # draw bbox rectangle
+            color = tuple(map(int, self.color_palette[int(cls_)]))
             cv2.rectangle(
                 im,
                 (int(box[0]), int(box[1])),
                 (int(box[2]), int(box[3])),
-                self.color_palette(int(cls_), bgr=True),
+                # self.color_palette(int(cls_), bgr=True),
+                color,
                 1,
                 cv2.LINE_AA,
             )
@@ -329,13 +375,14 @@ class YOLOv8Seg:
                 (int(box[0]), int(box[1] - 9)),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.7,
-                self.color_palette(int(cls_), bgr=True),
+                # self.color_palette(int(cls_), bgr=True),
+                color,
                 2,
                 cv2.LINE_AA,
             )
 
         # Mix image
-        im = cv2.addWeighted(im_canvas, 0.3, im, 0.7, 0)
+        #im = cv2.addWeighted(im_canvas, 0.3, im, 0.7, 0)
 
         # Show image
         if vis:

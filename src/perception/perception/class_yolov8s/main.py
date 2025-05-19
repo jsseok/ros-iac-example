@@ -1,5 +1,6 @@
 import rclpy
 import os
+import yaml
 
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
@@ -9,17 +10,18 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import numpy as np
 import onnxruntime as ort
-
-from ultralytics.utils import ASSETS, yaml_load
-from ultralytics.utils.checks import check_yaml
-from ultralytics.utils.plotting import Colors
+import time
 
 class ClassYolov8s(Node):
 
     def __init__(self):
         super().__init__('class_yolov8s')
         self.bridge = CvBridge()
-        self.model = YOLOv8(os.path.join(os.path.expanduser('~'), 'sdi_models','yolov8s.onnx'))
+
+        # model_path = os.environ.get("YOLO_MODEL_PATH", "/home/jetson/ros_IaC/data/yolov8s.onnx")
+        model_path = os.environ.get("YOLO_MODEL_PATH", "/home/jetson/ros_IaC/data/yolov8n.onnx")
+        self.model = YOLOv8(model_path)
+
         self.get_logger().info('READY: class_yolov8s')
         # sub & Image processing
         self.seg_yolov8s = self.create_subscription(
@@ -31,17 +33,29 @@ class ClassYolov8s(Node):
 
         # pub
         self.pub_class_img = self.create_publisher(Image, 'class_image', 1)
-    
+
+        self.last_log_time = time.time()
+
     def subscribe_topic_message(self, msg):
+        start = time.time()
+
         # Get an image
         frame = self.bridge.imgmsg_to_cv2(msg, 'bgr8')
 
         # Classificate the image
-        self.model.input_image = frame
-        output_image = self.model.main()
+        # self.model.input_image = frame
+        # output_image = self.model.main()
+        output_image = self.model.infer(frame)
 
         # Publish
         self.pub_class_img.publish(self.bridge.cv2_to_imgmsg(output_image, "bgr8"))
+
+        end = time.time()
+        fps = 1.0 / (end - start)
+        if end - self.last_log_time >= 10:
+            self.get_logger().info(f'Segmentation FPS: {fps:.2f}')
+            self.last_log_time = end
+
 
 class YOLOv8:
     """YOLOv8 object detection model class for handling inference and visualization."""
@@ -62,13 +76,22 @@ class YOLOv8:
         self.iou_thres = iou_thres
 
         # Create an inference session using the ONNX model and specify execution providers
-        self.session = ort.InferenceSession(self.onnx_model, providers=["CUDAExecutionProvider", "CPUExecutionProvider"])
+        self.session = ort.InferenceSession(
+            onnx_model,
+            providers=["CUDAExecutionProvider", "CPUExecutionProvider"]
+            if ort.get_device() == "GPU"
+            else ["CPUExecutionProvider"],
+        )
 
         # Load the class names from the COCO dataset
-        self.classes = yaml_load(check_yaml("coco8.yaml"))["names"]
+        yaml_path = os.environ.get("YOLO_CLASSES_PATH", "/home/jetson/ros_IaC/data/coco8.yaml")
+
+        with open(yaml_path, "r") as f:
+            self.classes = yaml.safe_load(f)["names"]
 
         # Generate a color palette for the classes
-        self.color_palette = np.random.uniform(0, 255, size=(len(self.classes), 3))
+        # self.color_palette = np.random.uniform(0, 255, size=(len(self.classes), 3))
+        self.color_palette = [tuple(map(int, color)) for color in np.random.uniform(0, 255, size=(len(self.classes), 3))]
 
     def draw_detections(self, img, box, score, class_id):
         """
@@ -95,6 +118,11 @@ class YOLOv8:
         # Create the label text with class name and score
         label = f"{self.classes[class_id]}: {score:.2f}"
 
+        label_x = int(x1)
+        label_y = int(y1) - 10 if (y1 - 10) > 10 else int(y1) + 20
+
+
+        '''
         # Calculate the dimensions of the label text
         (label_width, label_height), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
 
@@ -106,6 +134,7 @@ class YOLOv8:
         cv2.rectangle(
             img, (label_x, label_y - label_height), (label_x + label_width, label_y + label_height), color, cv2.FILLED
         )
+        '''
 
         # Draw the label text on the image
         cv2.putText(img, label, (label_x, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
@@ -194,6 +223,7 @@ class YOLOv8:
                 scores.append(max_score)
                 boxes.append([left, top, width, height])
 
+        '''
         # Apply non-maximum suppression to filter out overlapping bounding boxes
         indices = cv2.dnn.NMSBoxes(boxes, scores, self.confidence_thres, self.iou_thres)
 
@@ -206,10 +236,36 @@ class YOLOv8:
 
             # Draw the detection on the input image
             self.draw_detections(input_image, box, score, class_id)
+        '''
+        topk = 5  # 또는 상황 맞춰 10까지도 가능
+
+        if len(scores) > 0:
+            sorted_indices = np.argsort(-np.array(scores))[:topk]
+
+            for i in sorted_indices:
+                box = boxes[i]
+                score = scores[i]
+                class_id = class_ids[i]
+                self.draw_detections(input_image, box, score, class_id)
+
 
         # Return the modified input image
         return input_image
 
+    def infer(self, input_image):
+        self.input_image = input_image
+
+        model_inputs = self.session.get_inputs()
+        self.input_width = model_inputs[0].shape[2]
+        self.input_height = model_inputs[0].shape[3]
+
+        img_data = self.preprocess()
+
+        outputs = self.session.run(None, {model_inputs[0].name: img_data})
+
+        return self.postprocess(self.img, outputs)
+
+    '''
     def main(self):
         """
         Performs inference using an ONNX model and returns the output image with drawn detections.
@@ -234,6 +290,7 @@ class YOLOv8:
 
         # Perform post-processing on the outputs to obtain output image.
         return self.postprocess(self.img, outputs)  # output image
+    '''
 
 def main(args=None):
     rclpy.init(args=args)

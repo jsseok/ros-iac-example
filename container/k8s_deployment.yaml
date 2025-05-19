@@ -1,35 +1,161 @@
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: ros-iac-sensing
+#   namespace: sdi-ros-system
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: ros-iac-sensing
+#   template:
+#     metadata:
+#       annotations:
+#         k8s.v1.cni.cncf.io/networks: conf-macvlan-wlan
+#       labels:
+#         app: ros-iac-sensing
+#         role: sdi-apps
+#     spec:
+#       containers:
+#       - image: jsseok/ros-iac-apps:cam2image
+#         imagePullPolicy: Always
+#         tty: true
+#         name: ros-iac-sensing
+#         env:
+#         - name: ROS_DOMAIN_ID
+#           value: "7"
+#         volumeMounts:
+#         - name: video0
+#           mountPath: /dev/video0
+#           readOnly: true
+#         securityContext:
+#           privileged: true
+#       volumes:
+#       - name: video0
+#         hostPath:
+#           path: /dev/video0
+#           type: CharDevice
+#       nodeSelector:
+#         kubernetes.io/hostname: nano
+#       restartPolicy: Always
+
+# ---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sdi-pipeline-perception
+  name: ros-iac-sensing
   namespace: sdi-ros-system
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: sdi-pipeline-apps
+      app: ros-iac-sensing
   template:
     metadata:
       annotations:
-        #k8s.v1.cni.cncf.io/networks: conf-macvlan-eth1
-        #k8s.v1.cni.cncf.io/networks: conf-macvlan-eth0
         k8s.v1.cni.cncf.io/networks: conf-macvlan-wlan
       labels:
-        app: sdi-pipeline-apps
+        app: ros-iac-sensing
+        role: sdi-apps
+    spec:
+      hostIPC: true
+      containers:
+      - image: jsseok/ros-iac-apps:sensing
+        imagePullPolicy: Always
+        tty: true
+        name: ros-iac-sensing
+        env:
+        - name: ROS_DOMAIN_ID
+          value: "7"
+        resources:
+          limits:
+            cpu: "2"
+            memory: "1024Mi"
+          requests:
+            cpu: "0.5"
+            memory: "512Mi"
+        volumeMounts:
+        - name: video0
+          mountPath: /dev/video0
+          readOnly: true
+        - name: dshm
+          mountPath: /dev/shm
+        securityContext:
+          privileged: true
+      volumes:
+      - name: video0
+        hostPath:
+          path: /dev/video0
+          type: CharDevice
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 128Mi
+      nodeSelector:
+        kubernetes.io/hostname: nano
+      restartPolicy: Always
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ros-iac-perception
+  namespace: sdi-ros-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ros-iac-perception
+  template:
+    metadata:
+      annotations:
+        k8s.v1.cni.cncf.io/networks: conf-macvlan-eth0
+      labels:
+        app: ros-iac-perception
         role: sdi-apps
     spec:
       containers:
-        #- image: jsseok/sdi-pipeline-apps:latest
-      - image: jsseok/sdi-pipeline-apps:update
-        args: ["ros2", "run", "perception", "seg_yolov8s"]
+      - image: jsseok/ros-iac-apps:seg
         imagePullPolicy: Always
         tty: true
-        name: sdi-pipeline-perception
+        name: ros-iac-perception
         env:
         - name: ROS_DOMAIN_ID
           value: "7"
       nodeSelector:
-        #kubernetes.io/hostname: jsseok-linux-dev
-        #kubernetes.io/hostname: ubuntu
-        kubernetes.io/hostname: nano
+        kubernetes.io/hostname: node2-desktop
+      restartPolicy: Always
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ros-iac-broker
+  namespace: sdi-ros-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ros-iac-broker
+  template:
+    metadata:
+      annotations:
+        k8s.v1.cni.cncf.io/networks: conf-macvlan-eth0
+      labels:
+        app: ros-iac-broker
+        role: sdi-apps
+    spec:
+      containers:
+      - image: jsseok/ros-iac-apps:broker
+        imagePullPolicy: Always
+        tty: true
+        name: ros-iac-broker
+        env:
+        - name: ROS_DOMAIN_ID
+          value: "7"
+      nodeSelector:
+        kubernetes.io/hostname: node1-desktop
       restartPolicy: Always

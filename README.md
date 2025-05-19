@@ -1,63 +1,43 @@
-# [FOR DEMO] SDI CI/CD PIPELINE EXAMPLE 
-[![en](https://img.shields.io/badge/Lang-en-green.svg)](./README.en.md) ![license](https://img.shields.io/badge/License-MIT-blue.svg)
-
-SDI 1차년도 CI/CV/CD 파이프라인 데모를 위한 예제 저장소입니다.
-
-### 데모 프로세스
-
-요구사항 작성 및 github 저장소로 push --> requierments.txt
-
-(Jenkins) requirements.txt --> ROS2 Nodes 선정 --> list_of_nodes.yaml
-
-(Jenkins) list_of_nodes.json --> 선정된 노드들을 기반으로 Container 패키징 실시 --> Container Image 생성
-
-(Jenkins) Container Image --> 내부 래포지토리로 저장
-
-(K8s) SDx 디바이스로 컨테이너 배포
+## ROS On SDI Project
+This sub-project serves as a study case for deploying ROS applications via Infrastructure as Code (IaC).
 
 
----
-## TODO 
- * 프로젝트 README TOC 만들기
- * 틈틈히 소스코드 및 README 작성하기
- * ~~list_of_nodes 의 파일 형식 및 형태 정하기~~
- * ~~Container 경량화 문제 다루기~~
----
-## Table of Contents
+### Prerequisites
+- Kubernetes (k8s) cluster configured with macvlan for ROS DDS Discovery.
+- Docker or Podman for containerization.
+- Buildx multi-architecture build system (for cross-platform builds).
 
+### Usage
 
-## Overview
-![overview](./docs/images/overview.jpg)
+##### Build as a container
+```
+# go to the package directory
+cd <path/to/package>
 
+# build using docker buildx for multi-architecture support
+docker buildx build  --platform linux/arm64,linux/amd64 -t <repo:tag> -f container/Dockerfile --push .
+```
 
-## Node list
-현재 구현되어 레포지토리에 존재하는 노드 정보
+##### Deploy to the k8s
+- on k8s CP
+```
+# go to the ROS package directory
+kubectl apply -f container/k8s_deployment.yaml
+```
 
-### Sensing
-[Documents](./src/sensing/README.md)
-* usb_cam 
+##### Deployments YAML Detatils
+- **Namespace:** All resources are deployed within the `sdi-ros-system` namespace (`metadata.namespace`). Ensure this namespace exists in your cluster.
+- **Container Images:** Each deployment specifies the container image to use from the `jsseok/ros-iac-apps` repository, corresponding to the tags listed in the **[Available Images](#available-images)** section (e.g., `jsseok/ros-iac-apps:sensing`).
+- **Network Attachment (Macvlan):** The `k8s.v1.cni.cncf.io/networks` annotation is used to attach pods to a specific macvlan network (`conf-macvlan-wlan` or `conf-macvlan-eth0`). This is crucial for enabling ROS DDS discovery over a flat network as mentioned in the Prerequisites.
+- **ROS Domain ID:** The `ROS_DOMAIN_ID` environment variable is set for each pod (`spec.template.spec.containers.env`). In this example, it is set to `"7"`, but you should configure this value according to your specific network setup.
 
-### Perception
-[Documents](./src/perception/README.md)
-* seg_yolov8s
+### Available Images
+The container images for this project are available under the `jsseok/ros-iac-apps` repository. The following tags are provided:
 
-## Conventions
-### Branch strategy
-본 저장소는 Git-flow전략을 이용해 브랜치를 관리합니다.
-
-`main(master)`: 오류없이 배포할 수 있도록 완성된 브랜치
-
-`develop`: `main`브랜치 기반으로 다음 버전을 개발하는 브랜치
-
-`release`: 다음 배포 버전을 준비하는 브랜치 (`develop` 브랜치에서 작업중인 기능이 완성/검증되면 `release`로 merge 됩니다.)
-
-`feature`: 작은 모듈 및 기능을 개발하기 위한 브랜치
-
-`hotfix`: 버그 수정을 위한 브랜치
-
-관련해 읽어보면 도움이 되는 블로그입니다: [우린 Git-flow를 사용하고 있어요
-](https://techblog.woowahan.com/2553/)
-
-### ROS2 node naming
-TBD
-
+| Tag | Description |
+|----------:|:-------|
+| broker    | Relays the `rgb_image` topic from the USB Camera input to the `perception_image` topic used by perception nodes |
+| sensing   | Handles streaming from a USB Camera and publishes the `rgb_image` topic |
+| class     | Performs image classification on the camera input and publishes the result on the `class_image` topic |
+| seg       | Performs image segmentation on the camera input and publishes the result on the `seg_image` topic |
+| bringup   | Launches a set of core nodes including sensing, seg, and broker |
