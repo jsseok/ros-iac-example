@@ -1,51 +1,43 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ros-iac-perception
+  name: perception
   namespace: sdi-ros-system
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ros-iac-perception
+      app: perception
   template:
     metadata:
       annotations:
         k8s.v1.cni.cncf.io/networks: conf-macvlan-eth0
       labels:
-        app: ros-iac-perception
-        role: sdi-apps
+        app: perception
     spec:
       containers:
       - image: jsseok/ros-iac-apps:seg
-        imagePullPolicy: Always
-        tty: true
-        name: ros-iac-perception
-      restartPolicy: Always
+        name: perception
 
 ---
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ros-iac-broker
+  name: broker
   namespace: sdi-ros-system
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ros-iac-broker
+      app: broker
   template:
     metadata:
       annotations:
         k8s.v1.cni.cncf.io/networks: conf-macvlan-eth0
       labels:
-        app: ros-iac-broker
-        role: sdi-apps
+        app: broker
     spec:
       containers:
       - image: jsseok/ros-iac-apps:broker
-        imagePullPolicy: Always
-        tty: true
-        name: ros-iac-broker
-      restartPolicy: Always
+        name: broker
