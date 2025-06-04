@@ -21,8 +21,6 @@ spec:
         imagePullPolicy: Always
         tty: true
         name: ros-iac-perception
-      nodeSelector:
-        kubernetes.io/hostname: node2-desktop
       restartPolicy: Always
 
 ---
@@ -50,6 +48,4 @@ spec:
         imagePullPolicy: Always
         tty: true
         name: ros-iac-broker
-      nodeSelector:
-        kubernetes.io/hostname: node1-desktop
       restartPolicy: Always
